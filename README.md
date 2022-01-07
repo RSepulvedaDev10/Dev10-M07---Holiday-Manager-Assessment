@@ -36,6 +36,7 @@ Date for Internat'l Talk Like a Pirate Day: 2021-09-19
 
 Success:
 Internat'l Talk Like a Pirate Day (2021-09-19) has been added to the holiday list.
+
 Remove a Holiday
 Remove a Holiday
 ================
@@ -48,7 +49,9 @@ Holiday Name: Internat'l Talk Like a Pirate Day
 
 Success:
 Internat'l Talk Like a Pirate Day has been removed from the holiday list.
+
 Save Holiday List
+
 Saving Holiday List
 ====================
 Are you sure you want to save your changes? [y/n]: n
@@ -60,7 +63,9 @@ Are you sure you want to save your changes? [y/n]: y
 
 Success:
 Your changes have been saved.
+
 View Holidays
+
 View Holidays
 =================
 Which year?: 2021
