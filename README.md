@@ -8,6 +8,7 @@ The admin already knows about a starting JSON file named holidays.json and appre
 They want all of the holidays from [https://www.timeanddate.com/holidays/us/](https://www.timeanddate.com/holidays/us/) to also be preloaded. Only preload holidays with concrete dates. Do not calculate holiday dates. The team expects you to include holidays from the present year, 2 years of past holidays, and 2 years of future holidays
 The holidays must be saved in JSON, following the formatting of the provided file.
 With the holidays approaching, the marketing person may want to know what the weather looks like so they can determine what to market more. Use a weather API to show what the weather looks like for the current period. (See the notes below for details.) We recommend [Open Weather Map API](https://rapidapi.com/community/api/open-weather-map), but you are free to use any weather API you would like.
+
 Sample UI
 This is a sample UI which you can use as your base UI. While your UI may be different, make sure functionality outlined in the sample UI is accounted for in your UI.
 
