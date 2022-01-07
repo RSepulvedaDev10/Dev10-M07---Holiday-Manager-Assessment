@@ -1,8 +1,14 @@
 from bs4 import BeautifulSoup
+import datetime as dt
 import requests
 import json
 
 def addHoliday():
+    print(f"Add a Holiday")
+    print(f"====================\n")
+    
+    holidayprompt = input("Holiday Name: ")
+    dateprompt = input("Date: ")
     
 def removeHoliday():
     
@@ -14,15 +20,7 @@ def saveHolidayList():
         saveprompt = input("Are you sure you want to save your changes (y/n)? ").lower()
         
         if saveprompt == "y":
-            with open('Tournament Tracker Roster.csv') as file:
-                for i in range(1, len(participants)+1):
-                    try:
-                        file.write('{},{}\n').format(i, participants[i])
-                    except:
-                        continue
-                print(f"Tournament has been successfully saved")
-                file.close()
-                break
+            pass
         elif saveprompt == "n":
             print(f"Canceled:")
             print(f"\n Holiday list file save canceled")
