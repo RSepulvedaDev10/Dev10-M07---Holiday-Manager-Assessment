@@ -45,7 +45,7 @@ class HolidayList:
             date = input("Date (Ex: Jan 1 2022): ")
             
             try:
-                date = dt.strptime(date, "%b %d, %Y")
+                date = dt.datetime.strptime(date, "%b %d, %Y")
                 break
             except:
                 print("Invalid date format")
@@ -56,7 +56,6 @@ class HolidayList:
         print(f"{tempHolidayValue} has been successfully added to the list")
     
         self.innerHolidays.append(tempHolidayValue)
-    
     
     def removeHoliday(self):
         print(f"Remove a Holiday")
@@ -78,7 +77,7 @@ class HolidayList:
                 print(f"{name} was not found on the holiday list")
                 continue
     
-    def saveHolidayList(self):
+    def saveHolidayJSON(self, filename):
         print(f"Save Holiday List")
         print(f"====================\n")
     
@@ -86,7 +85,16 @@ class HolidayList:
             saveprompt = input("Are you sure you want to save your changes (y/n)? ").lower()
         
             if saveprompt == "y":
-                pass
+                tempJSONList = []
+                
+                for x in self.innerHolidays:
+                    with open(filename + ".json", "w") as jsonFile:
+                        tempJSONList.append(x.__dict__)
+                        
+                tempJSONList = {"holidays": tempJSONList}
+                
+                json.dump(tempJSONList, jsonFile)
+                
             elif saveprompt == "n":
                 print(f"Canceled:")
                 print(f"\n Holiday list file save canceled")
@@ -94,12 +102,64 @@ class HolidayList:
             else:
                 print(f"This is not a valid entry. Please enter 'y' or 'n' in the prompt.")
                 
-    def readHolidayJSON(self):
-        pass
+    def readHolidayJSON(self, filelocation):
+        try:
+            with open(filelocation, "r") as jsonFile:
+                load = json.load(jsonFile)
+            
+                for x in load["innerHolidays"]:
+                    self.innerHolidays.append(Holiday(x["name"], (dt.datetime.strptime(x["date"], "%b %d %Y")).date()))
+        except:
+            print("Error in reading JSON.")
     
-    def viewHolidays():
-        pass
+    def viewHolidays(self):
         
+        currentDate = dt.date.today()
+        yearValue = currentDate.year
+        
+        years = [str(yearValue - 2), str(yearValue - 1), str(yearValue), str(yearValue + 1), str(yearValue + 1)]
+        weeks = [x for x in range(1,53)]
+
+        
+        
+        print(f"View Holidays")
+        print(f"====================\n")
+        
+        while(True):
+            try:
+                yearPrompt = input("Which year between 2020 and 2024 would you like to choose: ")
+            
+                if yearPrompt not in years:
+                    raise
+                else: 
+                    break
+            
+            except:
+                print(f"Invalid input. Please input a year between 2020 and 2024")
+                continue
+            
+        while(True):
+            
+            try:
+                weekPrompt = input("Which week? Enter '1-52' or press 'Enter' for the current week")
+                
+                if int(weekPrompt) not in weeks or weekPrompt != "":
+                    raise
+                else:
+                    break
+                
+            except:
+                print("Invalid input. Please input a number between 1 and 52 or press 'Enter' while prompt is blank.")
+                continue
+            
+        if weekPrompt == "":
+            self.getWeather()
+        else:
+            print(self.viewCurrentWeek(int(yearPrompt), int(weekPrompt)))
+    
+    def viewCurrentWeek(self, yearPrompt, weekPrompt):
+        pass
+          
     def numberofHolidays(self):
         return len(self.innerHolidays)
     
@@ -151,7 +211,8 @@ def mainMenu():
         elif menuSelection == "3":
             HolidayList.viewHolidays()
         elif menuSelection == "4":
-            HolidayList.saveHolidayList()
+            filename = input("Please enter the name for the JSON file: ")
+            HolidayList.saveHolidayJSON(filename)
         elif menuSelection == "5":
             HolidayList.exit()
         else:
