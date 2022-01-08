@@ -8,6 +8,9 @@ import json
 class Holiday:
     name: str
     date: dt.date
+    
+    def __str__(self):
+        return self.name + " " + self.date.strftime("%Y-%m-%d")
 
 @dataclass
 class HolidayList:
@@ -76,6 +79,9 @@ class HolidayList:
             else:
                 print(f"{name} was not found on the holiday list")
                 continue
+    
+    def findHoliday():
+        pass
     
     def saveHolidayJSON(self, filename):
         print(f"Save Holiday List")
@@ -164,7 +170,16 @@ class HolidayList:
         return len(self.innerHolidays)
     
     def getWeather():
-        pass
+        currentDate = dt.date.today()
+        
+        weatherPrompt = input("Would you like to see this week's weather (y/n)? ").lower()
+        
+        if weatherPrompt == "y":
+            pass
+        elif weatherPrompt == "n":
+            pass
+        else:
+            print(f"Invalid Entry.")
     
     def exit():
         
@@ -189,6 +204,8 @@ def mainMenu():
     
     holidayList = HolidayList()
     holidayList.scrapeHolidays()
+    holidayList.readHolidayJSON('holidays.json')
+    print(holidayList.innerHolidays)
     
     while(True):
         
