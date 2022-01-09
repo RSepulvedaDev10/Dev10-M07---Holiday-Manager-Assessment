@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from datetime import date, datetime as dt
-from itertools import groupby
 import requests
 import json
 
@@ -15,14 +14,14 @@ class Holiday:
 
 @dataclass
 class HolidayList:
-    innerHolidays = list
+    innerHolidays: list
         
     def scrapeHolidays(self):
-        for i in range(2020, 2025):
-            try:
+        try:
+            for i in range(2020, 2025):
                 url = f"https://www.timeanddate.com/holidays/us/{str(i)}?hol=9565233"
                 response = requests.get(url).text
-                soup = BeautifulSoup(response, "html.parser")
+                soup = BeautifulSoup(response, 'html.parser')
             
                 holidays = soup.find_all("tr", class_="showrow")
                 
@@ -32,10 +31,9 @@ class HolidayList:
                     date = dt.strptime(row.find("th").text + " " + str(i), "%b %d %Y")
                     
                     self.innerHolidays.append(Holiday(name, date.date()))
-                    
-            except:
-                print(f"Website cannot be reached")
-                
+        except:
+            print(f"Website cannot be reached.")
+            
         return self.innerHolidays
     
     def addHoliday(self):
@@ -86,6 +84,16 @@ class HolidayList:
                 print(f"{name} was not found on the holiday list")
                 continue
     
+    def readHolidayJSON(self, filelocation):
+        try:
+            with open(filelocation, "r") as jsonfile:
+                data = json.load(jsonfile)
+                for i in range(len(data["holidays"])):
+                    holiday = Holiday(data["holidays"][i]["name"], data["holidays"][i]["date"])
+                    self.innerHolidays.append(holiday)
+        except:
+            print(f"Error in reading JSON")
+    
     def saveHolidayJSON(self, filename):
         print(f"Save Holiday List")
         print(f"====================\n")
@@ -101,6 +109,7 @@ class HolidayList:
                     jsonFile.write(json.dumps(holidays, indent = 4, default = str))
                     
                 print(f"Your changes have been saved to {filename}.json")
+                break
                 
             elif saveprompt == "n":
                 print(f"Canceled:")
@@ -108,16 +117,8 @@ class HolidayList:
                 break
             else:
                 print(f"This is not a valid entry. Please enter 'y' or 'n' in the prompt.")
+                continue
                 
-    def readHolidayJSON(self, filelocation):
-        try:
-            with open(filelocation, "r") as jsonFile:
-                load = json.load(jsonFile)
-            
-                for x in load["innerHolidays"]:
-                    self.innerHolidays.append(Holiday(x["name"], (dt.strptime(x["date"], "%b %d %Y")).date()))
-        except:
-            print("Error in reading JSON.")
     
     def viewHolidays(self):
         
@@ -213,7 +214,7 @@ class HolidayList:
 
 def mainMenu():
     
-    holidayList = HolidayList()
+    holidayList = HolidayList([])
     holidayList.scrapeHolidays()
     holidayList.readHolidayJSON('holidays.json')
     print(holidayList.innerHolidays)
@@ -247,5 +248,3 @@ def mainMenu():
             print(f"This is not a valid entry. Try again")
 
 mainMenu()
-
-weatherURL = ""
