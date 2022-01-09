@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
-import datetime as dt
+from datetime import date, datetime as dt
+from itertools import groupby
 import requests
 import json
 
@@ -10,7 +11,7 @@ class Holiday:
     date: dt.date
     
     def __str__(self):
-        return self.name + " " + self.date.strftime("%Y-%m-%d")
+        return self.name + " (" + self.date.strftime("%Y-%m-%d") + ")"
 
 @dataclass
 class HolidayList:
@@ -19,19 +20,18 @@ class HolidayList:
     def scrapeHolidays(self):
         for i in range(2020, 2025):
             try:
-                url = f"https://www.timeanddate.com/calendar/print.html?year={i}&country=1&cols=3&hol=33554809&df=1"
+                url = f"https://www.timeanddate.com/holidays/us/{str(i)}?hol=9565233"
                 response = requests.get(url).text
-                soup = BeautifulSoup(response, 'html.parser')
+                soup = BeautifulSoup(response, "html.parser")
             
-                holidays = soup.find('table', attrs={'class': 'cht lpad'})
-                for row in holidays.find_all_next('tr'):
+                holidays = soup.find_all("tr", class_="showrow")
                 
-                    cells = row.find_all_next('td')
-                    holiday = {}
-                
-                    holiday['Name'] = cells[1].string()
-                    holiday['Date'] = cells[0].string()
-                    self.innerHolidays.append(holiday)
+                for row in holidays:
+                    
+                    name = row.find("a").text
+                    date = dt.strptime(row.find("th").text + " " + str(i), "%b %d %Y")
+                    
+                    self.innerHolidays.append(Holiday(name, date.date()))
                     
             except:
                 print(f"Website cannot be reached")
@@ -43,22 +43,28 @@ class HolidayList:
         print(f"====================\n")
 
         name = input("Holiday Name: ")
-        
-        while(True):
+        while(True): 
             date = input("Date (Ex: Jan 1 2022): ")
-            
+        
             try:
-                date = dt.datetime.strptime(date, "%b %d, %Y")
+                date = dt.strptime(date,"%b %d %Y")
                 break
             except:
-                print("Invalid date format")
+                print("Error: invaild date format")
                 continue
-                
+            
         tempHolidayValue = Holiday(name, date)
         
-        print(f"{tempHolidayValue} has been successfully added to the list")
-    
-        self.innerHolidays.append(tempHolidayValue)
+        if isinstance(tempHolidayValue, Holiday):
+            if tempHolidayValue not in self.innerHolidays:
+                print(f"{tempHolidayValue} has been successfully added to the list")
+                self.innerHolidays.append(tempHolidayValue)
+            else:
+                print(f"{tempHolidayValue} is already in")
+        else:
+            print(f"Not a holiday object")
+        
+        return self.innerHolidays
     
     def removeHoliday(self):
         print(f"Remove a Holiday")
@@ -80,9 +86,6 @@ class HolidayList:
                 print(f"{name} was not found on the holiday list")
                 continue
     
-    def findHoliday():
-        pass
-    
     def saveHolidayJSON(self, filename):
         print(f"Save Holiday List")
         print(f"====================\n")
@@ -91,19 +94,17 @@ class HolidayList:
             saveprompt = input("Are you sure you want to save your changes (y/n)? ").lower()
         
             if saveprompt == "y":
-                tempJSONList = []
-                
-                for x in self.innerHolidays:
-                    with open(filename + ".json", "w") as jsonFile:
-                        tempJSONList.append(x.__dict__)
-                        
-                tempJSONList = {"holidays": tempJSONList}
-                
-                json.dump(tempJSONList, jsonFile)
+                with open(filename + ".json", "w") as jsonFile:    
+                    holidays = {"holidays": []}
+                    for holiday in self.innerHolidays:
+                        holidays["holidays"].append(holiday.__dict__)
+                    jsonFile.write(json.dumps(holidays, indent = 4, default = str))
+                    
+                print(f"Your changes have been saved to {filename}.json")
                 
             elif saveprompt == "n":
                 print(f"Canceled:")
-                print(f"\n Holiday list file save canceled")
+                print(f"Holiday list file save canceled")
                 break
             else:
                 print(f"This is not a valid entry. Please enter 'y' or 'n' in the prompt.")
@@ -114,13 +115,13 @@ class HolidayList:
                 load = json.load(jsonFile)
             
                 for x in load["innerHolidays"]:
-                    self.innerHolidays.append(Holiday(x["name"], (dt.datetime.strptime(x["date"], "%b %d %Y")).date()))
+                    self.innerHolidays.append(Holiday(x["name"], (dt.strptime(x["date"], "%b %d %Y")).date()))
         except:
             print("Error in reading JSON.")
     
     def viewHolidays(self):
         
-        currentDate = dt.date.today()
+        currentDate = date.today()
         yearValue = currentDate.year
         
         years = [str(yearValue - 2), str(yearValue - 1), str(yearValue), str(yearValue + 1), str(yearValue + 1)]
@@ -147,9 +148,9 @@ class HolidayList:
         while(True):
             
             try:
-                weekPrompt = input("Which week? Enter '1-52' or press 'Enter' for the current week")
+                weekPrompt = input("Which week? Enter '1-52' or leave blank for the current week: ")
                 
-                if int(weekPrompt) not in weeks or weekPrompt != "":
+                if int(weekPrompt) not in weeks and weekPrompt != "":
                     raise
                 else:
                     break
@@ -169,15 +170,25 @@ class HolidayList:
     def numberofHolidays(self):
         return len(self.innerHolidays)
     
-    def getWeather():
-        currentDate = dt.date.today()
+    def getWeather(self):
+        currentDate = date.today()
         
         weatherPrompt = input("Would you like to see this week's weather (y/n)? ").lower()
         
         if weatherPrompt == "y":
-            pass
+            
+            weatherResponse = self.viewCurrentWeek(currentDate.year, currentDate.isocalendar()[1] + 1)
+            weatherResponse = list(filter(lambda x: x.date.day >= currentDate.day , weatherResponse))
+            
+            for i in weatherResponse:
+                print(i)
+        
         elif weatherPrompt == "n":
-            pass
+            nonWeatherResponse = self.viewCurrentWeek(currentDate.year, currentDate.isocalendar()[1] + 1)
+            
+            for i in nonWeatherResponse:
+                print(i)
+                
         else:
             print(f"Invalid Entry.")
     
@@ -224,15 +235,17 @@ def mainMenu():
         if menuSelection == "1":
             holidayList.addHoliday()
         elif menuSelection == "2":
-            HolidayList.removeHoliday()
+            holidayList.removeHoliday()
         elif menuSelection == "3":
-            HolidayList.viewHolidays()
+            holidayList.viewHolidays()
         elif menuSelection == "4":
             filename = input("Please enter the name for the JSON file: ")
-            HolidayList.saveHolidayJSON(filename)
+            holidayList.saveHolidayJSON(filename)
         elif menuSelection == "5":
             HolidayList.exit()
         else:
             print(f"This is not a valid entry. Try again")
 
 mainMenu()
+
+weatherURL = ""
