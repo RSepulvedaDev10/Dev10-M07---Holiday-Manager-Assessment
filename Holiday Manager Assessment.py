@@ -88,8 +88,10 @@ class HolidayList:
         try:
             with open(filelocation, "r") as jsonfile:
                 data = json.load(jsonfile)
-                for i in range(len(data["holidays"])):
-                    holiday = Holiday(data["holidays"][i]["name"], data["holidays"][i]["date"])
+                for i in data["holidays"]:
+                    dateString = i["date"]
+                    formattedDate = dt.strptime(dateString, "%Y-%m-%d")
+                    holiday = Holiday(i["name"], formattedDate)
                     self.innerHolidays.append(holiday)
         except:
             print(f"Error in reading JSON")
@@ -122,10 +124,13 @@ class HolidayList:
     
     def viewHolidays(self):
         
-        currentDate = date.today()
-        yearValue = currentDate.year
+        currentWeek = (dt.today().isocalendar()[1]) + 1
+        currentYear = (dt.today().isocalendar()[0])
         
-        years = [str(yearValue - 2), str(yearValue - 1), str(yearValue), str(yearValue + 1), str(yearValue + 1)]
+        print(f"Current Week: {currentWeek}")
+        print(f"Current Year: {currentYear}")
+        
+        years = [int(currentYear - 2), int(currentYear - 1), int(currentYear), int(currentYear + 1), int(currentYear + 2)]
         weeks = [x for x in range(1,53)]
 
         
@@ -135,7 +140,7 @@ class HolidayList:
         
         while(True):
             try:
-                yearPrompt = input("Which year between 2020 and 2024 would you like to choose: ")
+                yearPrompt = int(input("Which year between 2020 and 2024 would you like to choose: "))
             
                 if yearPrompt not in years:
                     raise
@@ -149,9 +154,9 @@ class HolidayList:
         while(True):
             
             try:
-                weekPrompt = input("Which week? Enter '1-52' or leave blank for the current week: ")
+                weekPrompt = int(input("Which week? Enter '1-52' or enter '0' for the current week: "))
                 
-                if int(weekPrompt) not in weeks and weekPrompt != "":
+                if int(weekPrompt) not in weeks and weekPrompt != 0:
                     raise
                 else:
                     break
@@ -160,38 +165,75 @@ class HolidayList:
                 print("Invalid input. Please input a number between 1 and 52 or press 'Enter' while prompt is blank.")
                 continue
             
-        if weekPrompt == "":
-            self.getWeather()
+        if weekPrompt == 0:
+            weatherPrompt = input("Would you like to see this week's weather (y/n)? ").lower()
+            if weatherPrompt == "y":
+                print(f"Pulling weather. Here are all the holidays for the week, and weather for the rest of the week:")
+                self.viewCurrentWeek()
+            elif weatherPrompt == "n":
+                print(f"Here are all the holidays for week {currentWeek} in {currentYear}:")
+                self.displayHolidaysinWeek(currentYear,currentWeek)
+            else:
+                print(f"Invalid Entry.")
         else:
-            print(self.viewCurrentWeek(int(yearPrompt), int(weekPrompt)))
+            print(type(weekPrompt))
+            print(type(yearPrompt))
+            print(f"Here are all the holidays for week {weekPrompt} in {yearPrompt}:")
+            self.displayHolidaysinWeek(yearPrompt, weekPrompt)
     
-    def viewCurrentWeek(self, yearPrompt, weekPrompt):
-        pass
+    def displayHolidaysinWeek(self, year, week):
+        tempList = self.filterHolidaysbyWeek(year, week)
+        for holiday in tempList:
+            print(holiday)
+    
+    def viewCurrentWeek(self):
+        week = (dt.today().isocalendar()[1]) + 1
+        year = (dt.today().isocalendar()[0])
+        tempList = self.filterHolidaysbyWeek(year, week)
+        weather = self.getWeather()
+        for holiday in tempList:
+            print(str(holiday) + " - " + weather)
+        
           
     def numberofHolidays(self):
         return len(self.innerHolidays)
     
+    def filterHolidaysbyWeek(self, year, week):
+        results = filter(lambda x: x.date.year == year, filter(lambda x: x.date.isocalendar()[1] == week, self.innerHolidays))
+        return results
+    
     def getWeather(self):
-        currentDate = date.today()
+        weatherDict = {}
+        currentDate = dt.today().isocalendar()
+        week = []
+        for i in range(1,8):
+            day = dt.fromisocalendar(currentDate[0], currentDate[1] + 1, i)
+            week.append(day)
         
-        weatherPrompt = input("Would you like to see this week's weather (y/n)? ").lower()
-        
-        if weatherPrompt == "y":
             
-            weatherResponse = self.viewCurrentWeek(currentDate.year, currentDate.isocalendar()[1] + 1)
-            weatherResponse = list(filter(lambda x: x.date.day >= currentDate.day , weatherResponse))
+        url = "https://community-open-weather-map.p.rapidapi.com/forecast/daily"
+
+        querystring = {"q":"milwaukee, us","lat":"43.0389","lon":"-87.9065","cnt":"7","units":"imperial"}
+
+        headers = {
+        'x-rapidapi-host': "community-open-weather-map.p.rapidapi.com",
+        'x-rapidapi-key': "09a0e25236msh6ada605176faf8bp1b2d9fjsn3c2e43a1e536"
+        }
+
+        response = requests.request("GET", url, headers=headers, params=querystring).json()
+        response = response.get("list")
+        print(response)
             
-            for i in weatherResponse:
-                print(i)
-        
-        elif weatherPrompt == "n":
-            nonWeatherResponse = self.viewCurrentWeek(currentDate.year, currentDate.isocalendar()[1] + 1)
-            
-            for i in nonWeatherResponse:
-                print(i)
-                
-        else:
-            print(f"Invalid Entry.")
+        for day in response:
+            unixDate = day.get('dt')
+            unixDate = int(unixDate)
+            dtDate = dt.utcfromtimestamp(unixDate)
+            dtDate = dtDate.replace(hour=0)
+            if dtDate in week:
+                weather = ((day.get("weather"))[0]).get("main")
+                weatherDict[dtDate] = weather
+                    
+        return(weather)
     
     def exit():
         
@@ -217,7 +259,7 @@ def mainMenu():
     holidayList = HolidayList([])
     holidayList.scrapeHolidays()
     holidayList.readHolidayJSON('holidays.json')
-    print(holidayList.innerHolidays)
+    print(f"There are currently {len(holidayList.innerHolidays)} holidays stored in the system")
     
     while(True):
         
