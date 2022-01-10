@@ -127,9 +127,6 @@ class HolidayList:
         currentWeek = (dt.today().isocalendar()[1]) + 1
         currentYear = (dt.today().isocalendar()[0])
         
-        print(f"Current Week: {currentWeek}")
-        print(f"Current Year: {currentYear}")
-        
         years = [int(currentYear - 2), int(currentYear - 1), int(currentYear), int(currentYear + 1), int(currentYear + 2)]
         weeks = [x for x in range(1,53)]
 
@@ -225,13 +222,13 @@ class HolidayList:
         print(response)
             
         for day in response:
-            unixDate = day.get('dt')
-            unixDate = int(unixDate)
-            dtDate = dt.utcfromtimestamp(unixDate)
-            dtDate = dtDate.replace(hour=0)
-            if dtDate in week:
+            universalDate = day.get('dt')
+            convertedDate = int(universalDate)
+            utcDate = dt.utcfromtimestamp(convertedDate)
+            utcDate = utcDate.replace(hour=0)
+            if utcDate in week:
                 weather = ((day.get("weather"))[0]).get("main")
-                weatherDict[dtDate] = weather
+                weatherDict[utcDate] = weather
                     
         return(weather)
     
