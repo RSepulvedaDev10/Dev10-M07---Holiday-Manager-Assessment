@@ -138,26 +138,21 @@ class HolidayList:
         while(True):
             try:
                 yearPrompt = int(input("Which year between 2020 and 2024 would you like to choose: "))
-            
                 if yearPrompt not in years:
                     raise
                 else: 
                     break
-            
             except:
                 print(f"Invalid input. Please input a year between 2020 and 2024")
                 continue
             
         while(True):
-            
             try:
                 weekPrompt = int(input("Which week? Enter '1-52' or enter '0' for the current week: "))
-                
                 if int(weekPrompt) not in weeks and weekPrompt != 0:
                     raise
                 else:
                     break
-                
             except:
                 print("Invalid input. Please input a number between 1 and 52 or press 'Enter' while prompt is blank.")
                 continue
