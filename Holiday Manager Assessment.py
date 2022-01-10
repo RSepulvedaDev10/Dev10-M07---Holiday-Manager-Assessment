@@ -124,7 +124,7 @@ class HolidayList:
     
     def viewHolidays(self):
         
-        currentWeek = (dt.today().isocalendar()[1]) + 1
+        currentWeek = (dt.today().isocalendar()[1])
         currentYear = (dt.today().isocalendar()[0])
         
         years = [int(currentYear - 2), int(currentYear - 1), int(currentYear), int(currentYear + 1), int(currentYear + 2)]
@@ -160,7 +160,7 @@ class HolidayList:
         if weekPrompt == 0:
             weatherPrompt = input("Would you like to see this week's weather (y/n)? ").lower()
             if weatherPrompt == "y":
-                print(f"Pulling weather. Here are all the holidays for the week, and weather for the rest of the week:")
+                print(f"Pulling weather. Here are all the holidays for the week #{currentWeek}, and weather for the rest of the week:")
                 self.viewCurrentWeek()
             elif weatherPrompt == "n":
                 print(f"Here are all the holidays for week {currentWeek} in {currentYear}:")
@@ -179,12 +179,12 @@ class HolidayList:
             print(holiday)
     
     def viewCurrentWeek(self):
-        week = (dt.today().isocalendar()[1]) + 1
+        week = (dt.today().isocalendar()[1])
         year = (dt.today().isocalendar()[0])
         tempList = self.filterHolidaysbyWeek(year, week)
         weather = self.getWeather()
         for holiday in tempList:
-            print(str(holiday) + " - " + weather)
+            print(str(holiday) + " - " + str(weather[str(holiday.date)]))
         
           
     def numberofHolidays(self):
@@ -198,8 +198,9 @@ class HolidayList:
         weatherDict = {}
         currentDate = dt.today().isocalendar()
         week = []
+        weather3 = 0
         for i in range(1,8):
-            day = dt.fromisocalendar(currentDate[0], currentDate[1] + 1, i)
+            day = dt.fromisocalendar(currentDate[0], currentDate[1], i)
             week.append(day)
         
             
@@ -214,18 +215,21 @@ class HolidayList:
 
         response = requests.request("GET", url, headers=headers, params=querystring).json()
         response = response.get("list")
-        print(response)
-            
+          
         for day in response:
             universalDate = day.get('dt')
             convertedDate = int(universalDate)
             utcDate = dt.utcfromtimestamp(convertedDate)
             utcDate = utcDate.replace(hour=0)
             if utcDate in week:
-                weather = ((day.get("weather"))[0]).get("main")
-                weatherDict[utcDate] = weather
+                weather1 = (day.get("weather"))
+                weather2 = (weather1[0])
+                weather3 = (weather2.get("main"))
+                utcDate = str(utcDate.date())
+                weatherDict[utcDate] = weather3
                     
-        return(weather)
+        return(weatherDict)
+    
     
     def exit():
         
